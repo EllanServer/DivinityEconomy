@@ -2,8 +2,8 @@
 # Version: 1.0
 
 # Generic Command Responses
-GENERIC_PluginEnabled: "Plugin Enabled"
-GENERIC_PluginDisabled: "Plugin Disabled"
+GENERIC_PluginEnabled: "🚀 Plugin Enabled 🚀"
+GENERIC_PluginDisabled: "👋 Plugin Disabled 👋"
 GENERIC_EconomyNotEnabled: "Economy is not enabled. Shutting down."
 GENERIC_EconomyEnabled: "Economy is enabled. Provider: %s" # %s = provider
 GENERIC_PAPIEnabled: "PlaceholderAPI was found and is enabled, %s placeholders have been registered." # %s = amount
