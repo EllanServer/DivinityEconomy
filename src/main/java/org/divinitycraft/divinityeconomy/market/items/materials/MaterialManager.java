@@ -1,14 +1,14 @@
 package org.divinitycraft.divinityeconomy.market.items.materials;
 
-import net.milkbowl.vault.economy.EconomyResponse;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.divinitycraft.divinityeconomy.DEPlugin;
 import org.divinitycraft.divinityeconomy.config.Setting;
 import org.divinitycraft.divinityeconomy.lang.LangEntry;
 import org.divinitycraft.divinityeconomy.market.MarketableToken;
 import org.divinitycraft.divinityeconomy.market.items.ItemManager;
 import org.divinitycraft.divinityeconomy.utils.Converter;
+import net.milkbowl.vault.economy.EconomyResponse;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -56,9 +56,7 @@ public abstract class MaterialManager extends ItemManager {
         this.saveTimer.runTaskTimerAsynchronously(getMain(), timer, timer);
         this.loadItems();
         this.loadAliases();
-        if (getConfMan().getBoolean(Setting.CHAT_DEBUG_OUTPUT_BOOLEAN)) {
-            this.checkLoadedItems(); // This is for internal debugging only. Hi! :)
-        }
+        // this.checkLoadedItems(); - This is for internal debugging only. Hi! :)
         this.getMarkMan().addManager(this);
     }
 
