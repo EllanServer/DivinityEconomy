@@ -691,12 +691,11 @@ public abstract class TokenManager extends DivinityModule {
             if (purchase) {
                 value += getPrice(baseQuantity, currentQuantity, scale, inflation);
                 if (dynamic) currentQuantity -= 1;
-                if (marketInflation) marketSize -= 1;
-
+                if (dynamic && marketInflation) marketSize -= 1;
             } else {
                 value += getPrice(baseQuantity, currentQuantity + 1, scale, inflation);
                 if (dynamic) currentQuantity += 1;
-                if (marketInflation) marketSize += 1;
+                if (dynamic && marketInflation) marketSize += 1;
             }
         }
 
