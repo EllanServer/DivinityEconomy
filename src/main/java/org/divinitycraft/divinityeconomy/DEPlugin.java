@@ -274,7 +274,7 @@ public class DEPlugin extends JavaPlugin {
 
         // Done :)
         this.describe();
-        this.console.severe(LangEntry.GENERIC_PluginEnabled.get(this));
+        this.console.info(LangEntry.GENERIC_PluginEnabled.get(this));
     }
 
     /**
@@ -287,7 +287,7 @@ public class DEPlugin extends JavaPlugin {
             metrics.shutdown();
         }
         if (this.console != null) {
-            this.console.severe(LangEntry.GENERIC_PluginDisabled.get(this));
+            this.console.info(LangEntry.GENERIC_PluginDisabled.get(this));
         }
     }
 
