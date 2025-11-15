@@ -79,12 +79,9 @@ public class MarketablePotion extends MarketableMaterial {
         }
 
         // Ensure the object is of type MarketablePotion
-        if (!(material instanceof MarketablePotion)) {
+        if (!(material instanceof MarketablePotion potion)) {
             return false;
         }
-
-        // Cast the object to MarketablePotion
-        MarketablePotion potion = (MarketablePotion) material;
 
         // Check for nulls and compare all properties
         return this.material.equals(potion.material) &&
