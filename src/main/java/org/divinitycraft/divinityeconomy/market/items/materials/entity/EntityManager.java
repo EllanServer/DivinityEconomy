@@ -1,20 +1,19 @@
 package org.divinitycraft.divinityeconomy.market.items.materials.entity;
 
-import org.divinitycraft.divinityeconomy.DEPlugin;
-import org.divinitycraft.divinityeconomy.lang.LangEntry;
-import org.divinitycraft.divinityeconomy.market.items.materials.MarketableMaterial;
-import org.divinitycraft.divinityeconomy.market.items.materials.MaterialManager;
-import org.divinitycraft.divinityeconomy.market.items.materials.MaterialValueResponse;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
+import org.divinitycraft.divinityeconomy.DEPlugin;
+import org.divinitycraft.divinityeconomy.lang.LangEntry;
+import org.divinitycraft.divinityeconomy.market.items.materials.MarketableMaterial;
+import org.divinitycraft.divinityeconomy.market.items.materials.MaterialManager;
+import org.divinitycraft.divinityeconomy.market.items.materials.MaterialValueResponse;
 
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 public class EntityManager extends MaterialManager {
     // Stores the default items.json file location
@@ -40,12 +39,14 @@ public class EntityManager extends MaterialManager {
 
     @Override
     public Set<String> getLocalKeys() {
-        return Arrays.stream(EntityType.values())
-                .map(EntityType::getKey)
-                .map(NamespacedKey::getKey)
-                .map(Object::toString)
-                .map(String::toUpperCase)
-                .collect(Collectors.toSet());
+        Set<String> entityKeys = new HashSet<>();
+        for (EntityType type : EntityType.values()) {
+            try {
+                NamespacedKey key = type.getKey();
+                entityKeys.add(key.getKey().toUpperCase());
+            } catch (Exception ignored) {}
+        }
+        return entityKeys;
     }
 
     /**

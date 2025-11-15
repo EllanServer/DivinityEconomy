@@ -1,20 +1,19 @@
 package org.divinitycraft.divinityeconomy.market.items.materials.potion;
 
+import net.milkbowl.vault.economy.EconomyResponse;
+import org.bukkit.NamespacedKey;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionType;
 import org.divinitycraft.divinityeconomy.DEPlugin;
 import org.divinitycraft.divinityeconomy.lang.LangEntry;
 import org.divinitycraft.divinityeconomy.market.items.materials.MarketableMaterial;
 import org.divinitycraft.divinityeconomy.market.items.materials.MaterialManager;
 import org.divinitycraft.divinityeconomy.market.items.materials.MaterialValueResponse;
-import net.milkbowl.vault.economy.EconomyResponse;
-import org.bukkit.NamespacedKey;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.PotionEffectType;
 
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 public class PotionManager extends MaterialManager {
     public static final String PotionFile = "potions.yml";
@@ -38,12 +37,14 @@ public class PotionManager extends MaterialManager {
 
     @Override
     public Set<String> getLocalKeys() {
-        return Arrays.stream(PotionEffectType.values())
-                .map(PotionEffectType::getKey)
-                .map(NamespacedKey::getKey)
-                .map(Object::toString)
-                .map(String::toUpperCase)
-                .collect(Collectors.toSet());
+        Set<String> entityKeys = new HashSet<>();
+        for (PotionType type : PotionType.values()) {
+            try {
+                NamespacedKey key = type.getKey();
+                entityKeys.add(key.getKey().toUpperCase());
+            } catch (Exception ignored) {}
+        }
+        return entityKeys;
     }
 
 
