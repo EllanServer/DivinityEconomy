@@ -283,8 +283,12 @@ public class DEPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         DivinityModule.runDeinit();
-        metrics.shutdown();
-        this.console.severe(LangEntry.GENERIC_PluginDisabled.get(this));
+        if (this.metrics != null) {
+            metrics.shutdown();
+        }
+        if (this.console != null) {
+            this.console.severe(LangEntry.GENERIC_PluginDisabled.get(this));
+        }
     }
 
     /**
