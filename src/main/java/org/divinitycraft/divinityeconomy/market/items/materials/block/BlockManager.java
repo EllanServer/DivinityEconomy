@@ -63,7 +63,7 @@ public class BlockManager extends MaterialManager {
             damageValue = (maxDurability - durability) / maxDurability;
         }
 
-        return damageValue;
+        return Math.max(0.01, Math.min(1.0, damageValue));
     }
 
 
@@ -151,7 +151,7 @@ public class BlockManager extends MaterialManager {
 
 
         // Get value and add to response
-        double value = this.calculatePrice(amount, materialData.getQuantity(), (this.sellScale * this.getDamageScaling(itemStack)), false, materialData);
+        double value = this.calculatePrice(materialData, amount, (this.sellScale * this.getDamageScaling(itemStack)), false);
         response.addToken(materialData, amount, value, new ItemStack[]{itemStack});
 
 
@@ -201,7 +201,7 @@ public class BlockManager extends MaterialManager {
 
 
         // Get value
-        double value = this.calculatePrice(amount, materialData.getQuantity(), (this.buyScale * this.getDamageScaling(itemStack)), true, materialData);
+        double value = this.calculatePrice(materialData, amount, (this.buyScale * this.getDamageScaling(itemStack)), true);
         response.addToken(materialData, amount, value, new ItemStack[]{itemStack});
 
 

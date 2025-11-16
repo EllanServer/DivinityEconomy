@@ -68,7 +68,7 @@ public class HandSellTC extends DivinityCommandMaterialsTC {
                 // If uses clicks space after number, returns the value of the amount of item given
                 case 2:
                     strings = new String[]{
-                            LangEntry.VALUE_Response.get(getMain(), getMain().getConsole().formatMoney(marketableMaterial.getManager().calculatePrice(Converter.getInt(args[0]), marketableMaterial.getQuantity(), marketableMaterial.getManager().getSellScale(), false, marketableMaterial))),
+                            LangEntry.VALUE_Response.get(getMain(), getMain().getConsole().formatMoney(marketableMaterial.getManager().calculatePrice(marketableMaterial, Converter.getInt(args[0]), marketableMaterial.getManager().getSellScale(), false))),
                     };
                     break;
             }

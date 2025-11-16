@@ -23,7 +23,7 @@ public class V2PricingModel implements PricingModel {
     // Elasticity coefficients
     private static final double ITEM_ELASTICITY = 0.7;
     private static final double MARKET_ELASTICITY = 0.3;
-    private static final double BASE_PRICE = 15.0;
+    private static final double BASE_PRICE = 1.0;
 
     public V2PricingModel(double minItemValue, double maxItemValue) {
         this.minItemValue = minItemValue;
@@ -34,8 +34,7 @@ public class V2PricingModel implements PricingModel {
     public double calculatePrice(MarketableToken token, double baseQuantity, double defaultMarketSize,
                                  double marketSize, double amount, double scale, boolean purchase,
                                  boolean wholeMarketInflation) {
-        double elasticity = token.getElasticity();
-        return calculatePrice(token, baseQuantity, defaultMarketSize, marketSize, amount, scale, purchase, wholeMarketInflation, elasticity);
+        return calculatePrice(token, baseQuantity, defaultMarketSize, marketSize, amount, scale, purchase, wholeMarketInflation, token.getElasticity());
     }
 
     /**

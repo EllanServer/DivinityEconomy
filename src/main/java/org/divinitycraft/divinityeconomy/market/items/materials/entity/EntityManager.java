@@ -71,7 +71,7 @@ public class EntityManager extends MaterialManager {
 
 
         // Get value and add token to response
-        double value = this.calculatePrice(amount, entityData.getQuantity(), this.sellScale, false, entityData);
+        double value = this.calculatePrice(entityData, amount, this.sellScale, false);
         response.addToken(entityData, amount, value, new ItemStack[]{itemStack});
 
 
@@ -110,7 +110,7 @@ public class EntityManager extends MaterialManager {
 
 
         // Get value and add token to response
-        double value = this.calculatePrice(amount, entityData.getQuantity(), this.buyScale, true, entityData);
+        double value = this.calculatePrice(entityData, amount, this.buyScale, true);
         response.addToken(entityData, amount, value, new ItemStack[]{itemStack});
 
 

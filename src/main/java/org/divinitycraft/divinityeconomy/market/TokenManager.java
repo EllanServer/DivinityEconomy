@@ -300,14 +300,10 @@ public abstract class TokenManager extends DivinityModule {
      * @return double
      */
     public double getBuyPrice(double stock, MarketableToken itemData) {
-        if (this.pricingModel == null) {
-            return this.getPrice(stock, this.buyScale, this.getInflation());
-        }
         // For Static pricing, use the item's configured price; otherwise use baseQuantity
-        double baseValue = (this.pricingModel instanceof StaticPricingModel && itemData != null)
+        double baseValue = (this.pricingModel instanceof StaticPricingModel)
                           ? itemData.getPrice() : this.baseQuantity;
-        double elasticity = itemData != null ? itemData.getElasticity() : 0.7;
-        return this.pricingModel.getPrice(baseValue, stock, this.buyScale, this.getInflation(), elasticity);
+        return this.pricingModel.getPrice(baseValue, stock, this.buyScale, this.getInflation(), itemData.getElasticity());
     }
 
     /**
@@ -325,11 +321,7 @@ public abstract class TokenManager extends DivinityModule {
         // For dynamic pricing models (V1, V2), also calculate and set the stock level
         // that would result in this price
         if (!(this.pricingModel instanceof StaticPricingModel)) {
-            if (this.pricingModel == null) {
-                itemData.setQuantity(this.calculateStock(value, this.buyScale, this.getInflation()));
-            } else {
-                itemData.setQuantity(this.pricingModel.calculateStock(this.baseQuantity, value, this.buyScale, this.getInflation()));
-            }
+            itemData.setQuantity(this.pricingModel.calculateStock(this.baseQuantity, value, this.buyScale, this.getInflation()));
         }
     }
 
@@ -379,35 +371,14 @@ public abstract class TokenManager extends DivinityModule {
      * Calculates the price of a item * amount
      * This is not the same as price * amount -- Factors in price change and inflation change during purchase
      *
+     * @param itemData - The item data (used to get elasticity, price, and quantity)
      * @param amount   - The amount to calculate the price for
-     * @param stock    - The stock of the material (deprecated, now obtained from token)
      * @param scale    - The scaling to apply, such as tax
      * @param purchase - Whether this is a purchase from or sale to the market
-     * @param itemData - The item data (used to get elasticity, price, and quantity)
      * @return double
      */
-    public double calculatePrice(double amount, double stock, double scale, boolean purchase, MarketableToken itemData) {
-        if (this.pricingModel == null || itemData == null) {
-            return calculatePrice(this.baseQuantity, stock, this.defaultTotalItems, this.totalItems, amount, scale, purchase, true, this.wholeMarketInflation);
-        }
-
+    public double calculatePrice(MarketableToken itemData, double amount, double scale, boolean purchase) {
         return this.pricingModel.calculatePrice(itemData, this.baseQuantity, this.defaultTotalItems, this.totalItems, amount, scale, purchase, this.wholeMarketInflation);
-    }
-
-    /**
-     * Returns the price for an item based on it's stock and the scale to apply
-     * Scale of 1.2 = 20% additive Scale of .8 = 20% reduction
-     *
-     * @param stock     - The stock of the material
-     * @param scale     - The scaling to apply to the price
-     * @param inflation - The level of inflation
-     * @return double - The price of the material
-     */
-    public double getPrice(double stock, double scale, double inflation) {
-        if (!this.wholeMarketInflation) {
-            inflation = 1.0;
-        }
-        return this.fitPriceToConstraints(getPrice(this.baseQuantity, stock, scale, inflation));
     }
 
     /**
@@ -459,9 +430,6 @@ public abstract class TokenManager extends DivinityModule {
      */
     public double getInflation() {
         if (this.wholeMarketInflation) {
-            if (this.pricingModel == null) {
-                return Converter.constrainDouble(getInflation(this.defaultTotalItems, this.totalItems), 0, 100);
-            }
             return Converter.constrainDouble(this.pricingModel.getInflation(this.defaultTotalItems, this.totalItems), 0, 100);
         } else {
             return 1.0;

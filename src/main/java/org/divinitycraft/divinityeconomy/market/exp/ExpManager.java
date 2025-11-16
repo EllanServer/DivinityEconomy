@@ -103,7 +103,7 @@ public class ExpManager extends TokenManager {
         }
 
         // Calculate the value of the experience
-        double price = this.calculatePrice(amount, exp.getQuantity(), this.buyScale, true, exp);
+        double price = this.calculatePrice(exp, amount, this.buyScale, true);
         if (price < 0) {
             return new ValueResponse(0, EconomyResponse.ResponseType.FAILURE, LangEntry.EXPERIENCE_IsWorthless.get(getMain()));
         }
@@ -155,7 +155,7 @@ public class ExpManager extends TokenManager {
         }
 
         // Check that the requested amount of experience is available to sell
-        double price = this.calculatePrice(amount, exp.getQuantity(), this.sellScale, false, exp);
+        double price = this.calculatePrice(exp, amount, this.sellScale, false);
         if (price < 0) {
             return new ValueResponse(0, EconomyResponse.ResponseType.FAILURE, LangEntry.EXPERIENCE_IsWorthless.get(getMain()));
         }
