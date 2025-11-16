@@ -218,14 +218,14 @@ commands:
 
   editbal:
     description: "Edits the balance of a player."
-    aliases: [ ]
+    aliases: [ "adjustbal" ]
     permission: de.admin.editbal
     permission-message: "You do not have the permission to use this command"
     usage: "/editbal <player name> <amount>, /editbal <amount>"
 
   setbal:
     description: "Sets the balance of a player."
-    aliases: [ 'setcash' ]
+    aliases: [ 'setcash', "setbalance" ]
     permission: de.admin.setbal
     permission-message: "You do not have the permission to use this command"
     usage: "/setbal <player name> <amount>, /setbal <amount>"
@@ -239,28 +239,28 @@ commands:
 
   setValue:
     description: "Sets the value of an item"
-    aliases: [ ]
+    aliases: [ "setprice" ]
     permission: de.admin.setValue
     permission-message: "You do not have permission to use this command"
-    usage: "/setvalue <material name> <value>"
+    usage: "/setvalue <material name> <value> | /setprice <material name> <value>"
 
   setStock:
     description: "Sets the stock of an item"
-    aliases: [ ]
+    aliases: [ "setquantity" ]
     permission: de.admin.setStock
     permission-message: "You do not have permission to use this command"
     usage: "/setstock <material name> <stock>"
 
   eSetValue:
     description: "Sets the value of an enchant"
-    aliases: [ ]
+    aliases: [ "esetprice" ]
     permission: de.admin.eSetValue
     permission-message: "You do not have permission to use this command"
     usage: "/esetvalue <enchant name> <value>"
 
   eSetStock:
     description: "Sets the stock of an enchant"
-    aliases: [ ]
+    aliases: [ "esetquantity" ]
     permission: de.admin.eSetStock
     permission-message: "You do not have permission to use this command"
     usage: "/esetstock <enchant name> <stock>"
