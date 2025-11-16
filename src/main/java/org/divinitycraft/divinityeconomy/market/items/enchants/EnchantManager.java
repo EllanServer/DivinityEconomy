@@ -341,7 +341,7 @@ public class EnchantManager extends ItemManager {
         int enchantAmount = MarketableEnchant.levelsToBooks(itemStackEnchantmentLevel, newTotalLevel);
 
         // Get value
-        double value = this.calculatePrice(enchantAmount, enchantData.getQuantity(), this.buyScale, false);
+        double value = this.calculatePrice(enchantAmount, enchantData.getQuantity(), this.buyScale, false, enchantData);
         response.addToken(enchantData, enchantAmount, value, itemStack);
 
 
@@ -541,7 +541,7 @@ public class EnchantManager extends ItemManager {
 
 
         // Get value
-        double value = this.calculatePrice(bookLevel, enchantData.getQuantity(), this.sellScale, false);
+        double value = this.calculatePrice(bookLevel, enchantData.getQuantity(), this.sellScale, false, enchantData);
         response.addToken(enchantData, levelsToSell, value, itemStack);
 
 

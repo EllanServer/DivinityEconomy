@@ -69,7 +69,7 @@ public class PotionManager extends MaterialManager {
 
 
         // Get value and add token to response
-        double value = this.calculatePrice(amount, potionData.getQuantity(), this.sellScale, false);
+        double value = this.calculatePrice(amount, potionData.getQuantity(), this.sellScale, false, potionData);
         response.addToken(potionData, amount, value, new ItemStack[]{itemStack});
 
 
@@ -109,7 +109,7 @@ public class PotionManager extends MaterialManager {
 
 
         // Get value and add token to response
-        double value = this.calculatePrice(amount, potionData.getQuantity(), this.buyScale, true);
+        double value = this.calculatePrice(amount, potionData.getQuantity(), this.buyScale, true, potionData);
         response.addToken(potionData, amount, value, new ItemStack[]{itemStack});
 
 

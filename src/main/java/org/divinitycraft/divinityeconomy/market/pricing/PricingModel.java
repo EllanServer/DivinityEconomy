@@ -1,5 +1,7 @@
 package org.divinitycraft.divinityeconomy.market.pricing;
 
+import org.divinitycraft.divinityeconomy.market.MarketableToken;
+
 /**
  * Interface for different pricing models in the market system.
  * Implementations define how prices are calculated based on supply and demand.
@@ -9,8 +11,8 @@ public interface PricingModel {
     /**
      * Calculates the price of an amount of items, factoring in dynamic supply changes.
      *
+     * @param token             - The marketable token being priced
      * @param baseQuantity      - The base quantity of the item
-     * @param currentQuantity   - The current quantity of the item
      * @param defaultMarketSize - The default market size
      * @param marketSize        - The current market size
      * @param amount            - The amount of the item to buy/sell
@@ -19,7 +21,7 @@ public interface PricingModel {
      * @param wholeMarketInflation - Whether to apply market-wide inflation
      * @return double - Total price for the transaction
      */
-    double calculatePrice(double baseQuantity, double currentQuantity, double defaultMarketSize,
+    double calculatePrice(MarketableToken token, double baseQuantity, double defaultMarketSize,
                          double marketSize, double amount, double scale, boolean purchase,
                          boolean wholeMarketInflation);
 

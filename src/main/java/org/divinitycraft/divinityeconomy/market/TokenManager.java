@@ -293,81 +293,43 @@ public abstract class TokenManager extends DivinityModule {
     }
 
     /**
-     * Returns the number of unique aliases in the market
-     *
-     * @return int
-     */
-    public int getAliasCount() {
-        return this.aliasMap.size();
-    }
-
-    /**
      * Returns the market price based on stock
      *
      * @param stock - The stock of the item
-     * @param itemData - The item data (used to get elasticity)
+     * @param itemData - The item data (used to get elasticity and price)
      * @return double
      */
     public double getBuyPrice(double stock, MarketableToken itemData) {
         if (this.pricingModel == null) {
             return this.getPrice(stock, this.buyScale, this.getInflation());
         }
+        // For Static pricing, use the item's configured price; otherwise use baseQuantity
+        double baseValue = (this.pricingModel instanceof StaticPricingModel && itemData != null)
+                          ? itemData.getPrice() : this.baseQuantity;
         double elasticity = itemData != null ? itemData.getElasticity() : 0.7;
-        return this.pricingModel.getPrice(this.baseQuantity, stock, this.buyScale, this.getInflation(), elasticity);
-    }
-
-    /**
-     * Returns the market price based on stock (without item data, uses default elasticity)
-     *
-     * @param stock - The stock of the item
-     * @return double
-     */
-    public double getBuyPrice(double stock) {
-        if (this.pricingModel == null) {
-            return this.getPrice(stock, this.buyScale, this.getInflation());
-        }
-        return this.pricingModel.getPrice(this.baseQuantity, stock, this.buyScale, this.getInflation());
-    }
-
-    /**
-     * Returns the user price based on stock
-     *
-     * @param stock - The stock of the item
-     * @param itemData - The item data (used to get elasticity)
-     * @return double
-     */
-    public double getSellPrice(double stock, MarketableToken itemData) {
-        if (this.pricingModel == null) {
-            return this.getPrice(stock, this.sellScale, this.getInflation());
-        }
-        double elasticity = itemData != null ? itemData.getElasticity() : 0.7;
-        return this.pricingModel.getPrice(this.baseQuantity, stock, this.sellScale, this.getInflation(), elasticity);
-    }
-
-    /**
-     * Returns the user price based on stock (without item data, uses default elasticity)
-     *
-     * @param stock - The stock of the item
-     * @return double
-     */
-    public double getSellPrice(double stock) {
-        if (this.pricingModel == null) {
-            return this.getPrice(stock, this.sellScale, this.getInflation());
-        }
-        return this.pricingModel.getPrice(this.baseQuantity, stock, this.sellScale, this.getInflation());
+        return this.pricingModel.getPrice(baseValue, stock, this.buyScale, this.getInflation(), elasticity);
     }
 
     /**
      * Sets the price of an item
+     * This updates both the PRICE field (for static pricing) and calculates/sets the QUANTITY
+     * (for dynamic pricing models to achieve the desired price)
      *
      * @param itemData - The material to set
      * @param value    - The value to set the price to
      */
     public void setPrice(MarketableToken itemData, double value) {
-        if (this.pricingModel == null) {
-            itemData.setQuantity(this.calculateStock(value, this.buyScale, this.getInflation()));
-        } else {
-            itemData.setQuantity(this.pricingModel.calculateStock(this.baseQuantity, value, this.buyScale, this.getInflation()));
+        // Always update the PRICE field in config (used by Static pricing model)
+        itemData.setPrice(value);
+
+        // For dynamic pricing models (V1, V2), also calculate and set the stock level
+        // that would result in this price
+        if (!(this.pricingModel instanceof StaticPricingModel)) {
+            if (this.pricingModel == null) {
+                itemData.setQuantity(this.calculateStock(value, this.buyScale, this.getInflation()));
+            } else {
+                itemData.setQuantity(this.pricingModel.calculateStock(this.baseQuantity, value, this.buyScale, this.getInflation()));
+            }
         }
     }
 
@@ -418,41 +380,18 @@ public abstract class TokenManager extends DivinityModule {
      * This is not the same as price * amount -- Factors in price change and inflation change during purchase
      *
      * @param amount   - The amount to calculate the price for
-     * @param stock    - The stock of the material
+     * @param stock    - The stock of the material (deprecated, now obtained from token)
      * @param scale    - The scaling to apply, such as tax
      * @param purchase - Whether this is a purchase from or sale to the market
-     * @param itemData - The item data (used to get elasticity)
+     * @param itemData - The item data (used to get elasticity, price, and quantity)
      * @return double
      */
     public double calculatePrice(double amount, double stock, double scale, boolean purchase, MarketableToken itemData) {
-        if (this.pricingModel == null) {
+        if (this.pricingModel == null || itemData == null) {
             return calculatePrice(this.baseQuantity, stock, this.defaultTotalItems, this.totalItems, amount, scale, purchase, true, this.wholeMarketInflation);
         }
 
-        // Use V2's elasticity-aware method if available
-        if (this.pricingModel instanceof V2PricingModel && itemData != null) {
-            double elasticity = itemData.getElasticity();
-            return ((V2PricingModel) this.pricingModel).calculatePrice(this.baseQuantity, stock, this.defaultTotalItems, this.totalItems, amount, scale, purchase, this.wholeMarketInflation, elasticity);
-        }
-
-        return this.pricingModel.calculatePrice(this.baseQuantity, stock, this.defaultTotalItems, this.totalItems, amount, scale, purchase, this.wholeMarketInflation);
-    }
-
-    /**
-     * Calculates the price of a item * amount (without item data, uses default elasticity)
-     * This is not the same as price * amount -- Factors in price change and inflation change during purchase
-     *
-     * @param amount   - The amount to calculate the price for
-     * @param stock    - The stock of the material
-     * @param scale    - The scaling to apply, such as tax
-     * @param purchase - Whether this is a purchase from or sale to the market
-     * @return double
-     */
-    public double calculatePrice(double amount, double stock, double scale, boolean purchase) {
-        if (this.pricingModel == null) {
-            return calculatePrice(this.baseQuantity, stock, this.defaultTotalItems, this.totalItems, amount, scale, purchase, true, this.wholeMarketInflation);
-        }
-        return this.pricingModel.calculatePrice(this.baseQuantity, stock, this.defaultTotalItems, this.totalItems, amount, scale, purchase, this.wholeMarketInflation);
+        return this.pricingModel.calculatePrice(itemData, this.baseQuantity, this.defaultTotalItems, this.totalItems, amount, scale, purchase, this.wholeMarketInflation);
     }
 
     /**

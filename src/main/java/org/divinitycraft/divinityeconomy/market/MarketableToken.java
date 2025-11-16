@@ -147,6 +147,33 @@ public abstract class MarketableToken extends DivinityModule {
     }
 
     /**
+     * Returns the configured base price for this item.
+     * This is used by the Static pricing model to maintain fixed prices.
+     * If not specified in config, defaults to 15.0.
+     *
+     * @return double - The base price for this item
+     */
+    public double getPrice() {
+        // Try to get from config, default to 15.0 if not present
+        if (this.itemConfig.contains(MapKeys.PRICE.key)) {
+            return this.itemConfig.getDouble(MapKeys.PRICE.key);
+        } else if (this.defaultItemConfig.contains(MapKeys.PRICE.key)) {
+            return this.defaultItemConfig.getDouble(MapKeys.PRICE.key);
+        }
+        return 15.0; // Default price
+    }
+
+    /**
+     * Sets the configured base price for this item.
+     * This updates the PRICE field in the config.
+     *
+     * @param price - The new base price for this item
+     */
+    public void setPrice(double price) {
+        this.setData(MapKeys.PRICE.key, price);
+    }
+
+    /**
      * Returns the banned state of the item
      * True means the item is allowed
      * False means the item is banned

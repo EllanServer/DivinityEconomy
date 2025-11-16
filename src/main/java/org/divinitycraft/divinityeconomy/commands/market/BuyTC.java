@@ -75,7 +75,7 @@ public class BuyTC extends DivinityCommandMaterialsTC {
                     }
                     amount = Converter.constrainInt(amount, Constants.MIN_VALUE_AMOUNT, Constants.MAX_VALUE_AMOUNT);
                     args[1] = String.valueOf(amount);
-                    value = String.format("%s", getMain().getConsole().formatMoney(marketableMaterial.getManager().calculatePrice(amount, marketableMaterial.getQuantity(), marketableMaterial.getManager().getBuyScale(), true)));
+                    value = String.format("%s", getMain().getConsole().formatMoney(marketableMaterial.getManager().calculatePrice(amount, marketableMaterial.getQuantity(), marketableMaterial.getManager().getBuyScale(), true, marketableMaterial)));
                 }
 
                 strings = new String[]{

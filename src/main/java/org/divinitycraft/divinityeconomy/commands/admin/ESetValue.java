@@ -56,7 +56,7 @@ public class ESetValue extends DivinityCommand {
         }
 
         int previousStock = enchantData.getQuantity();
-        double previousValue = getMain().getEnchMan().getBuyPrice(enchantData.getQuantity());
+        double previousValue = getMain().getEnchMan().getBuyPrice(enchantData.getQuantity(), enchantData);
         getMain().getEnchMan().setPrice(enchantData, value);
         getMain().getConsole().send(sender, LangEntry.STOCK_ValueChanged.logLevel, LangEntry.STOCK_ValueChanged.get(getMain()), getMain().getConsole().formatMoney(previousValue), previousStock, getMain().getConsole().formatMoney(value), enchantData.getQuantity());
 

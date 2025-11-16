@@ -1,6 +1,7 @@
 package org.divinitycraft.divinityeconomy.market.pricing;
 
 import org.divinitycraft.divinityeconomy.Constants;
+import org.divinitycraft.divinityeconomy.market.MarketableToken;
 import org.divinitycraft.divinityeconomy.utils.Converter;
 
 /**
@@ -24,9 +25,10 @@ public class V1PricingModel implements PricingModel {
     }
 
     @Override
-    public double calculatePrice(double baseQuantity, double currentQuantity, double defaultMarketSize,
+    public double calculatePrice(MarketableToken token, double baseQuantity, double defaultMarketSize,
                                  double marketSize, double amount, double scale, boolean purchase,
                                  boolean wholeMarketInflation) {
+        double currentQuantity = token.getQuantity();
         double value = 0;
         double inflation = 1.0;
 

@@ -1,6 +1,7 @@
 package org.divinitycraft.divinityeconomy.market.pricing;
 
 import org.divinitycraft.divinityeconomy.Constants;
+import org.divinitycraft.divinityeconomy.market.MarketableToken;
 import org.divinitycraft.divinityeconomy.utils.Converter;
 
 /**
@@ -30,18 +31,18 @@ public class V2PricingModel implements PricingModel {
     }
 
     @Override
-    public double calculatePrice(double baseQuantity, double currentQuantity, double defaultMarketSize,
+    public double calculatePrice(MarketableToken token, double baseQuantity, double defaultMarketSize,
                                  double marketSize, double amount, double scale, boolean purchase,
                                  boolean wholeMarketInflation) {
-        // Use default elasticity when not specified
-        return calculatePrice(baseQuantity, currentQuantity, defaultMarketSize, marketSize, amount, scale, purchase, wholeMarketInflation, ITEM_ELASTICITY);
+        double elasticity = token.getElasticity();
+        return calculatePrice(token, baseQuantity, defaultMarketSize, marketSize, amount, scale, purchase, wholeMarketInflation, elasticity);
     }
 
     /**
      * Calculates the price of an amount of items with custom elasticity, factoring in dynamic supply changes.
      *
+     * @param token                - The marketable token being priced
      * @param baseQuantity         - The base quantity of the item
-     * @param currentQuantity      - The current quantity of the item
      * @param defaultMarketSize    - The default market size
      * @param marketSize           - The current market size
      * @param amount               - The amount of the item to buy/sell
@@ -51,9 +52,10 @@ public class V2PricingModel implements PricingModel {
      * @param elasticity           - The elasticity coefficient for this specific item
      * @return double - Total price for the transaction
      */
-    public double calculatePrice(double baseQuantity, double currentQuantity, double defaultMarketSize,
+    public double calculatePrice(MarketableToken token, double baseQuantity, double defaultMarketSize,
                                  double marketSize, double amount, double scale, boolean purchase,
                                  boolean wholeMarketInflation, double elasticity) {
+        double currentQuantity = token.getQuantity();
         double value = 0;
         double inflation = 1.0;
 

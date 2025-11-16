@@ -151,7 +151,7 @@ public class BlockManager extends MaterialManager {
 
 
         // Get value and add to response
-        double value = this.calculatePrice(amount, materialData.getQuantity(), (this.sellScale * this.getDamageScaling(itemStack)), false);
+        double value = this.calculatePrice(amount, materialData.getQuantity(), (this.sellScale * this.getDamageScaling(itemStack)), false, materialData);
         response.addToken(materialData, amount, value, new ItemStack[]{itemStack});
 
 
@@ -201,7 +201,7 @@ public class BlockManager extends MaterialManager {
 
 
         // Get value
-        double value = this.calculatePrice(amount, materialData.getQuantity(), (this.buyScale * this.getDamageScaling(itemStack)), true);
+        double value = this.calculatePrice(amount, materialData.getQuantity(), (this.buyScale * this.getDamageScaling(itemStack)), true, materialData);
         response.addToken(materialData, amount, value, new ItemStack[]{itemStack});
 
 

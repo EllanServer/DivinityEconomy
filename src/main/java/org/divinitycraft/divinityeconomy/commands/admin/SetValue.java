@@ -56,7 +56,7 @@ public class SetValue extends DivinityCommand {
         }
 
         int previousStock = marketableMaterial.getQuantity();
-        double previousValue = marketableMaterial.getManager().getBuyPrice(marketableMaterial.getQuantity());
+        double previousValue = marketableMaterial.getManager().getBuyPrice(marketableMaterial.getQuantity(), marketableMaterial);
         marketableMaterial.getManager().setPrice(marketableMaterial, value);
         getMain().getConsole().send(sender, LangEntry.STOCK_ValueChanged.logLevel, String.format(LangEntry.STOCK_ValueChanged.get(getMain()), getMain().getConsole().formatMoney(previousValue), previousStock, getMain().getConsole().formatMoney(value), marketableMaterial.getQuantity()));
 

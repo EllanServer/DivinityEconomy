@@ -58,9 +58,9 @@ public class SetStock extends DivinityCommand {
 
 
         int previousStock = marketableMaterial.getQuantity();
-        double previousValue = marketableMaterial.getManager().getBuyPrice(marketableMaterial.getQuantity());
+        double previousValue = marketableMaterial.getManager().getBuyPrice(marketableMaterial.getQuantity(), marketableMaterial);
         marketableMaterial.getManager().setQuantity(marketableMaterial, stock);
-        getMain().getConsole().send(sender, LangEntry.STOCK_CountChanged.logLevel, LangEntry.STOCK_CountChanged.get(getMain()), previousStock, getMain().getConsole().formatMoney(previousValue), stock, getMain().getConsole().formatMoney(marketableMaterial.getManager().getBuyPrice(marketableMaterial.getQuantity())));
+        getMain().getConsole().send(sender, LangEntry.STOCK_CountChanged.logLevel, LangEntry.STOCK_CountChanged.get(getMain()), previousStock, getMain().getConsole().formatMoney(previousValue), stock, getMain().getConsole().formatMoney(marketableMaterial.getManager().getBuyPrice(marketableMaterial.getQuantity(), marketableMaterial)));
 
         return true;
     }

@@ -58,9 +58,9 @@ public class ESetStock extends DivinityCommand {
 
 
         int previousStock = enchantData.getQuantity();
-        double previousValue = getMain().getEnchMan().getBuyPrice(enchantData.getQuantity());
+        double previousValue = getMain().getEnchMan().getBuyPrice(enchantData.getQuantity(), enchantData);
         getMain().getEnchMan().setQuantity(enchantData, stock);
-        getMain().getConsole().send(sender, LangEntry.STOCK_CountChanged.logLevel, LangEntry.STOCK_CountChanged.get(getMain()), previousStock, getMain().getConsole().formatMoney(previousValue), stock, getMain().getConsole().formatMoney(getMain().getEnchMan().getBuyPrice(enchantData.getQuantity())));
+        getMain().getConsole().send(sender, LangEntry.STOCK_CountChanged.logLevel, LangEntry.STOCK_CountChanged.get(getMain()), previousStock, getMain().getConsole().formatMoney(previousValue), stock, getMain().getConsole().formatMoney(getMain().getEnchMan().getBuyPrice(enchantData.getQuantity(), enchantData)));
 
         return true;
     }
