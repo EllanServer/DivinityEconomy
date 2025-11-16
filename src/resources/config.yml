@@ -248,7 +248,7 @@ Market:
     Enable: true
     # What is the base quantity? ( use any number above 0 )
     # Changing this number affects both the overall value of items and the rate at which prices change.
-    Base Quantity: 100000000000
+    Base Quantity: 10000000
     # What scaling should be applied to purchases and sales? ( use any decimal above 0 )
     # Make sure to scale sales less than purchases or you risk creating an infinite cash bug.
     Buy Scaling: 1.25
