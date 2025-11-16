@@ -219,6 +219,56 @@ Market:
     # Should items that have names be ignored? ( use "true" / "false" )
     Ignore Named Items: true
 
+  # Entity Settings
+  Entities:
+    # Should the entity market be enabled? ( use "true" / "false" )
+    Enable: true
+    # What is the base quantity? ( use any number above 0 )
+    # Changing this number affects both the overall value of items and the rate at which prices change.
+    # Lower base quantity means more scarcity and higher prices
+    Base Quantity: 500000
+    # What scaling should be applied to purchases and sales? ( use any decimal above 0 )
+    # Make sure to scale sales less than purchases or you risk creating an infinite cash bug.
+    # Higher scaling makes items more expensive
+    Buy Scaling: 1.1
+    Sell Scaling: 1.0
+    # What pricing model should be used? ( use "V1", "V2", or "STATIC" )
+    # V1 - Linear pricing model (original system with simple inverse relationship)
+    # V2 - Elasticity-based pricing with realistic supply-demand curves (recommended)
+    # STATIC - Fixed pricing with no dynamic changes
+    Pricing Model: "V2"
+    # Should the whole market be used to determine the value of items in the form of inflation? ( use "true" / "false" ) | warning, this has not been extensively tested.
+    Whole Market Inflation: false
+    # Should items such as swords have their values scaled as per the damage applied to them? ( use "true" / "false" )
+    Item Damage Scaling: true
+    # Should items that have names be ignored? ( use "true" / "false" )
+    Ignore Named Items: true
+
+  # Potion Settings
+  Potions:
+    # Should the potion market be enabled? ( use "true" / "false" )
+    Enable: true
+    # What is the base quantity? ( use any number above 0 )
+    # Changing this number affects both the overall value of items and the rate at which prices change.
+    # Lower base quantity means more scarcity and higher prices
+    Base Quantity: 500000
+    # What scaling should be applied to purchases and sales? ( use any decimal above 0 )
+    # Make sure to scale sales less than purchases or you risk creating an infinite cash bug.
+    # Higher scaling makes items more expensive
+    Buy Scaling: 1.1
+    Sell Scaling: 1.0
+    # What pricing model should be used? ( use "V1", "V2", or "STATIC" )
+    # V1 - Linear pricing model (original system with simple inverse relationship)
+    # V2 - Elasticity-based pricing with realistic supply-demand curves (recommended)
+    # STATIC - Fixed pricing with no dynamic changes
+    Pricing Model: "V2"
+    # Should the whole market be used to determine the value of items in the form of inflation? ( use "true" / "false" ) | warning, this has not been extensively tested.
+    Whole Market Inflation: false
+    # Should items such as swords have their values scaled as per the damage applied to them? ( use "true" / "false" )
+    Item Damage Scaling: true
+    # Should items that have names be ignored? ( use "true" / "false" )
+    Ignore Named Items: true
+
   # Enchant Settings
   Enchants:
     # Should the enchant market be enabled? ( use "true" / "false" )

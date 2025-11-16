@@ -5,11 +5,14 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.divinitycraft.divinityeconomy.DEPlugin;
+import org.divinitycraft.divinityeconomy.config.Setting;
 import org.divinitycraft.divinityeconomy.lang.LangEntry;
 import org.divinitycraft.divinityeconomy.market.items.materials.MarketableMaterial;
 import org.divinitycraft.divinityeconomy.market.items.materials.MaterialManager;
 import org.divinitycraft.divinityeconomy.market.items.materials.MaterialValueResponse;
+import org.divinitycraft.divinityeconomy.utils.Converter;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -29,6 +32,48 @@ public class EntityManager extends MaterialManager {
     public EntityManager(DEPlugin main) {
         super(main, entitiesFile, aliasesFile, new ConcurrentHashMap<String, MarketableEntity>());
         new SpawnerPlaceListener(main);
+    }
+
+    @Override
+    public void init() {
+        this.saveMessagesDisabled = this.getConfMan().getBoolean(Setting.IGNORE_SAVE_MESSAGE_BOOLEAN);
+        this.buyScale = this.getConfMan().getDouble(Setting.MARKET_ENTITIES_BUY_TAX_FLOAT);
+        this.sellScale = this.getConfMan().getDouble(Setting.MARKET_ENTITIES_SELL_TAX_FLOAT);
+        this.baseQuantity = this.getConfMan().getInt(Setting.MARKET_ENTITIES_BASE_QUANTITY_INTEGER);
+        this.wholeMarketInflation = this.getConfMan().getBoolean(Setting.MARKET_ENTITIES_WHOLE_MARKET_INF_BOOLEAN);
+        this.maxItemValue = this.getConfMan().getDouble(Setting.MARKET_MAX_ITEM_VALUE_DOUBLE);
+        this.ignoreNamedItems = this.getConfMan().getBoolean(Setting.MARKET_ENTITIES_IGNORE_NAMED_ITEMS_BOOLEAN);
+        if (this.maxItemValue < 0) {
+            this.maxItemValue = Double.MAX_VALUE;
+        }
+        this.minItemValue = this.getConfMan().getDouble(Setting.MARKET_MIN_ITEM_VALUE_DOUBLE);
+        if (this.minItemValue < 0) {
+            this.minItemValue = Double.MIN_VALUE;
+        }
+
+        // Initialize pricing model
+        String pricingModelName = this.getConfMan().getString(Setting.MARKET_ENTITIES_PRICING_MODEL_STRING);
+        this.initializePricingModel(pricingModelName);
+
+        int timer = Converter.getTicks(this.getConfMan().getInt(Setting.MARKET_SAVE_TIMER_INTEGER));
+        this.saveTimer = new BukkitRunnable() {
+            @Override
+            public void run() {
+                saveItems();
+            }
+        };
+        this.saveTimer.runTaskTimerAsynchronously(getMain(), timer, timer);
+        this.loadItems();
+        this.loadAliases();
+        // this.checkLoadedItems(); - This is for internal debugging only. Hi! :)
+        this.getMarkMan().addManager(this);
+    }
+
+    @Override
+    public void deinit() {
+        this.saveTimer.cancel();
+        this.saveItems();
+        this.getMarkMan().removeManager(this);
     }
 
     @Override
