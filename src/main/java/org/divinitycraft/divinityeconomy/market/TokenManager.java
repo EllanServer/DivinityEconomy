@@ -6,6 +6,10 @@ import org.divinitycraft.divinityeconomy.DEPlugin;
 import org.divinitycraft.divinityeconomy.DivinityModule;
 import org.divinitycraft.divinityeconomy.config.Setting;
 import org.divinitycraft.divinityeconomy.lang.LangEntry;
+import org.divinitycraft.divinityeconomy.market.pricing.PricingModel;
+import org.divinitycraft.divinityeconomy.market.pricing.V1PricingModel;
+import org.divinitycraft.divinityeconomy.market.pricing.V2PricingModel;
+import org.divinitycraft.divinityeconomy.market.pricing.StaticPricingModel;
 import org.divinitycraft.divinityeconomy.utils.Converter;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -43,10 +47,11 @@ public abstract class TokenManager extends DivinityModule {
     protected double buyScale;
     protected double sellScale;
     protected double baseQuantity;
-    protected boolean dynamicPricing;
     protected boolean wholeMarketInflation;
     protected boolean ignoreNamedItems;
     protected boolean saveMessagesDisabled;
+    // Pricing model
+    protected PricingModel pricingModel;
     // Stores config
     protected FileConfiguration config;
 
@@ -300,20 +305,56 @@ public abstract class TokenManager extends DivinityModule {
      * Returns the market price based on stock
      *
      * @param stock - The stock of the item
+     * @param itemData - The item data (used to get elasticity)
+     * @return double
+     */
+    public double getBuyPrice(double stock, MarketableToken itemData) {
+        if (this.pricingModel == null) {
+            return this.getPrice(stock, this.buyScale, this.getInflation());
+        }
+        double elasticity = itemData != null ? itemData.getElasticity() : 0.7;
+        return this.pricingModel.getPrice(this.baseQuantity, stock, this.buyScale, this.getInflation(), elasticity);
+    }
+
+    /**
+     * Returns the market price based on stock (without item data, uses default elasticity)
+     *
+     * @param stock - The stock of the item
      * @return double
      */
     public double getBuyPrice(double stock) {
-        return this.getPrice(stock, this.buyScale, this.getInflation());
+        if (this.pricingModel == null) {
+            return this.getPrice(stock, this.buyScale, this.getInflation());
+        }
+        return this.pricingModel.getPrice(this.baseQuantity, stock, this.buyScale, this.getInflation());
     }
 
     /**
      * Returns the user price based on stock
      *
      * @param stock - The stock of the item
+     * @param itemData - The item data (used to get elasticity)
+     * @return double
+     */
+    public double getSellPrice(double stock, MarketableToken itemData) {
+        if (this.pricingModel == null) {
+            return this.getPrice(stock, this.sellScale, this.getInflation());
+        }
+        double elasticity = itemData != null ? itemData.getElasticity() : 0.7;
+        return this.pricingModel.getPrice(this.baseQuantity, stock, this.sellScale, this.getInflation(), elasticity);
+    }
+
+    /**
+     * Returns the user price based on stock (without item data, uses default elasticity)
+     *
+     * @param stock - The stock of the item
      * @return double
      */
     public double getSellPrice(double stock) {
-        return this.getPrice(stock, this.sellScale, this.getInflation());
+        if (this.pricingModel == null) {
+            return this.getPrice(stock, this.sellScale, this.getInflation());
+        }
+        return this.pricingModel.getPrice(this.baseQuantity, stock, this.sellScale, this.getInflation());
     }
 
     /**
@@ -323,7 +364,11 @@ public abstract class TokenManager extends DivinityModule {
      * @param value    - The value to set the price to
      */
     public void setPrice(MarketableToken itemData, double value) {
-        itemData.setQuantity(this.calculateStock(value, this.buyScale, this.getInflation()));
+        if (this.pricingModel == null) {
+            itemData.setQuantity(this.calculateStock(value, this.buyScale, this.getInflation()));
+        } else {
+            itemData.setQuantity(this.pricingModel.calculateStock(this.baseQuantity, value, this.buyScale, this.getInflation()));
+        }
     }
 
     /**
@@ -376,10 +421,38 @@ public abstract class TokenManager extends DivinityModule {
      * @param stock    - The stock of the material
      * @param scale    - The scaling to apply, such as tax
      * @param purchase - Whether this is a purchase from or sale to the market
+     * @param itemData - The item data (used to get elasticity)
+     * @return double
+     */
+    public double calculatePrice(double amount, double stock, double scale, boolean purchase, MarketableToken itemData) {
+        if (this.pricingModel == null) {
+            return calculatePrice(this.baseQuantity, stock, this.defaultTotalItems, this.totalItems, amount, scale, purchase, true, this.wholeMarketInflation);
+        }
+
+        // Use V2's elasticity-aware method if available
+        if (this.pricingModel instanceof V2PricingModel && itemData != null) {
+            double elasticity = itemData.getElasticity();
+            return ((V2PricingModel) this.pricingModel).calculatePrice(this.baseQuantity, stock, this.defaultTotalItems, this.totalItems, amount, scale, purchase, this.wholeMarketInflation, elasticity);
+        }
+
+        return this.pricingModel.calculatePrice(this.baseQuantity, stock, this.defaultTotalItems, this.totalItems, amount, scale, purchase, this.wholeMarketInflation);
+    }
+
+    /**
+     * Calculates the price of a item * amount (without item data, uses default elasticity)
+     * This is not the same as price * amount -- Factors in price change and inflation change during purchase
+     *
+     * @param amount   - The amount to calculate the price for
+     * @param stock    - The stock of the material
+     * @param scale    - The scaling to apply, such as tax
+     * @param purchase - Whether this is a purchase from or sale to the market
      * @return double
      */
     public double calculatePrice(double amount, double stock, double scale, boolean purchase) {
-        return calculatePrice(this.baseQuantity, stock, this.defaultTotalItems, this.totalItems, amount, scale, purchase, this.dynamicPricing, this.wholeMarketInflation);
+        if (this.pricingModel == null) {
+            return calculatePrice(this.baseQuantity, stock, this.defaultTotalItems, this.totalItems, amount, scale, purchase, true, this.wholeMarketInflation);
+        }
+        return this.pricingModel.calculatePrice(this.baseQuantity, stock, this.defaultTotalItems, this.totalItems, amount, scale, purchase, this.wholeMarketInflation);
     }
 
     /**
@@ -410,6 +483,7 @@ public abstract class TokenManager extends DivinityModule {
 
     /**
      * Calculates the stock based on the price.
+     * Inverse function of getRawPrice() using the elasticity curve.
      *
      * @param price     - The price of the item
      * @param scale     - The scale of the price
@@ -417,15 +491,23 @@ public abstract class TokenManager extends DivinityModule {
      * @return int - The level of stock required for this price.
      */
     public int calculateStock(double price, double scale, double inflation) {
-        // Reverse fitPriceToConstraints and inflation/scaling factors to get the raw price
+        // Reverse the scaling and inflation factors to get the raw price
         double rawPrice = price / (scale * inflation);
 
-        // Since the raw price is calculated as (scale * 10) + (scale * 5)
-        // We need to isolate the scale, which is baseQuantity / currentQuantity
-        double finalScale = rawPrice / 15;
+        // Reverse the logarithmic pricing formula
+        // rawPrice = basePrice * (1 / supplyRatio)^elasticity
+        // Solving for supplyRatio:
+        // (1 / supplyRatio)^elasticity = rawPrice / basePrice
+        // 1 / supplyRatio = (rawPrice / basePrice)^(1/elasticity)
+        // supplyRatio = 1 / ((rawPrice / basePrice)^(1/elasticity))
+        // currentQuantity = baseQuantity * supplyRatio
 
-        // Now, use the scale to find the current quantity
-        double newQuantity = this.baseQuantity / finalScale;
+        double basePrice = 15.0;
+        double elasticity = 0.7;
+        double priceRatio = rawPrice / basePrice;
+        double inverseSupplyRatio = Math.pow(priceRatio, 1.0 / elasticity);
+        double supplyRatio = 1.0 / inverseSupplyRatio;
+        double newQuantity = this.baseQuantity * supplyRatio;
 
         return (int) newQuantity;
     }
@@ -438,7 +520,10 @@ public abstract class TokenManager extends DivinityModule {
      */
     public double getInflation() {
         if (this.wholeMarketInflation) {
-            return Converter.constrainDouble(getInflation(this.defaultTotalItems, this.totalItems), 0 , 100);
+            if (this.pricingModel == null) {
+                return Converter.constrainDouble(getInflation(this.defaultTotalItems, this.totalItems), 0, 100);
+            }
+            return Converter.constrainDouble(this.pricingModel.getInflation(this.defaultTotalItems, this.totalItems), 0, 100);
         } else {
             return 1.0;
         }
@@ -470,6 +555,62 @@ public abstract class TokenManager extends DivinityModule {
      */
     public long getDefaultTotalItems() {
         return defaultTotalItems;
+    }
+
+    /**
+     * Initializes the pricing model based on the configuration setting.
+     * Should be called after loading config values.
+     *
+     * @param modelName - The name of the pricing model to use ("V1", "V2", or "STATIC")
+     */
+    protected void initializePricingModel(String modelName) {
+        if (modelName == null) {
+            modelName = "V2"; // Default to V2
+        }
+
+        switch (modelName.toUpperCase()) {
+            case "V1":
+            case "LINEAR":
+                this.pricingModel = new V1PricingModel(this.minItemValue, this.maxItemValue);
+                this.getConsole().info("Using V1 (Linear) pricing model");
+                break;
+            case "V2":
+            case "ELASTICITY":
+                this.pricingModel = new V2PricingModel(this.minItemValue, this.maxItemValue);
+                this.getConsole().info("Using V2 (Elasticity) pricing model");
+                break;
+            case "STATIC":
+            case "FIXED":
+                this.pricingModel = new StaticPricingModel(this.minItemValue, this.maxItemValue);
+                this.getConsole().info("Using Static pricing model");
+                break;
+            default:
+                this.pricingModel = new V2PricingModel(this.minItemValue, this.maxItemValue);
+                this.getConsole().warn("Unknown pricing model '%s', defaulting to V2", modelName);
+                break;
+        }
+    }
+
+    /**
+     * Updates the pricing model's constraints when min/max values change
+     */
+    protected void updatePricingModelConstraints() {
+        if (this.pricingModel instanceof V1PricingModel) {
+            ((V1PricingModel) this.pricingModel).updateConstraints(this.minItemValue, this.maxItemValue);
+        } else if (this.pricingModel instanceof V2PricingModel) {
+            ((V2PricingModel) this.pricingModel).updateConstraints(this.minItemValue, this.maxItemValue);
+        } else if (this.pricingModel instanceof StaticPricingModel) {
+            ((StaticPricingModel) this.pricingModel).updateConstraints(this.minItemValue, this.maxItemValue);
+        }
+    }
+
+    /**
+     * Returns the current pricing model
+     *
+     * @return PricingModel - The current pricing model
+     */
+    public PricingModel getPricingModel() {
+        return this.pricingModel;
     }
 
     /**
@@ -725,38 +866,64 @@ public abstract class TokenManager extends DivinityModule {
 
     /**
      * Calculates the raw price of the product based on base and current quantities.
+     * Uses a logarithmic supply-demand curve for more realistic price elasticity.
+     * When supply is low, prices increase exponentially (scarcity premium).
+     * When supply is high, prices decrease logarithmically (diminishing returns).
      *
      * @param baseQuantity    - Base quantity of the product.
      * @param currentQuantity - Current quantity of the product.
      * @return double - The raw price of the product.
      */
     private double getRawPrice(double baseQuantity, double currentQuantity) {
-        // calculate scale and apply it to the price
-        double scale = getScale(baseQuantity, currentQuantity);
+        // Calculate the supply ratio (how much supply vs baseline)
+        double supplyRatio = currentQuantity / baseQuantity;
 
-        // calculate raw price and fit it to the required constraints
-        return fitPriceToConstraints(scale * 15);
+        // Use logarithmic curve for more realistic supply-demand dynamics
+        // When supply is scarce (ratio < 1): prices rise exponentially
+        // When supply is abundant (ratio > 1): prices fall with diminishing returns
+        // Formula: basePrice * (baseQuantity/currentQuantity)^elasticity
+        // Elasticity of 0.7 provides realistic curve without extreme swings
+        double elasticity = 0.7;
+        double priceMultiplier = Math.pow(1.0 / supplyRatio, elasticity);
+
+        // Base price of 15 maintains compatibility with existing economy
+        double basePrice = 15.0;
+        double rawPrice = basePrice * priceMultiplier;
+
+        return fitPriceToConstraints(rawPrice);
     }
 
     /**
      * Calculates the inflation factor based on default and actual market sizes.
-     * It's essentially a wrapper around getScale function.
+     * Uses supply-demand elasticity to model realistic market-wide price changes.
+     * Market inflation represents the overall scarcity/abundance in the economy.
      *
      * @param defaultMarketSize - Default quantity of materials in the market.
      * @param actualMarketSize - Actual quantity of materials in the market.
      * @return double - The inflation factor.
      */
     public double getInflation(double defaultMarketSize, double actualMarketSize) {
-        return getScale(defaultMarketSize, actualMarketSize);
+        // Avoid division by zero
+        if (actualMarketSize <= 0) actualMarketSize = 1;
+
+        // Market-wide inflation uses similar elasticity curve
+        // But with lower elasticity (0.3) for more stable economy-wide changes
+        double marketSupplyRatio = actualMarketSize / defaultMarketSize;
+        double marketElasticity = 0.3;
+
+        // Calculate inflation multiplier using power curve
+        return Math.pow(1.0 / marketSupplyRatio, marketElasticity);
     }
 
     /**
      * Calculates the scale of a number based on its base value.
-     * It's essentially the ratio of base quantity to the current quantity.
+     * This method is kept for backwards compatibility but is no longer used
+     * in the primary pricing calculations which now use elasticity curves.
      *
      * @param baseQuantity    - Base quantity of the product.
      * @param currentQuantity - Current quantity of the product.
      * @return double - The scale factor.
+     * @deprecated Use elasticity-based calculations in getRawPrice and getInflation instead.
      */
     public double getScale(double baseQuantity, double currentQuantity) {
         return baseQuantity / currentQuantity;

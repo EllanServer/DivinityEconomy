@@ -129,6 +129,24 @@ public abstract class MarketableToken extends DivinityModule {
     }
 
     /**
+     * Returns the elasticity coefficient for this item.
+     * Elasticity determines how much price changes with supply variations.
+     * Higher values = more volatile pricing, lower values = more stable pricing.
+     * Default is 0.7 if not specified in config.
+     *
+     * @return double - The elasticity coefficient (typically 0.3 to 1.2)
+     */
+    public double getElasticity() {
+        // Try to get from config, default to 0.7 if not present
+        if (this.itemConfig.contains(MapKeys.ELASTICITY.key)) {
+            return this.itemConfig.getDouble(MapKeys.ELASTICITY.key);
+        } else if (this.defaultItemConfig.contains(MapKeys.ELASTICITY.key)) {
+            return this.defaultItemConfig.getDouble(MapKeys.ELASTICITY.key);
+        }
+        return 0.7; // Default elasticity
+    }
+
+    /**
      * Returns the banned state of the item
      * True means the item is allowed
      * False means the item is banned

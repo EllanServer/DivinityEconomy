@@ -53,7 +53,6 @@ public class EnchantManager extends ItemManager {
         this.buyScale = this.getConfMan().getDouble(Setting.MARKET_ENCHANTS_BUY_TAX_FLOAT);
         this.sellScale = this.getConfMan().getDouble(Setting.MARKET_ENCHANTS_SELL_TAX_FLOAT);
         this.baseQuantity = this.getConfMan().getInt(Setting.MARKET_ENCHANTS_BASE_QUANTITY_INTEGER);
-        this.dynamicPricing = this.getConfMan().getBoolean(Setting.MARKET_ENCHANTS_DYN_PRICING_BOOLEAN);
         this.wholeMarketInflation = this.getConfMan().getBoolean(Setting.MARKET_ENCHANTS_WHOLE_MARKET_INF_BOOLEAN);
         this.maxItemValue = this.getConfMan().getDouble(Setting.MARKET_MAX_ITEM_VALUE_DOUBLE);
         if (this.maxItemValue < 0) {
@@ -63,6 +62,11 @@ public class EnchantManager extends ItemManager {
         if (this.minItemValue < 0) {
             this.minItemValue = Double.MIN_VALUE;
         }
+
+        // Initialize pricing model
+        String pricingModelName = this.getConfMan().getString(Setting.MARKET_ENCHANTS_PRICING_MODEL_STRING);
+        this.initializePricingModel(pricingModelName);
+
         int timer = Converter.getTicks(this.getConfMan().getInt(Setting.MARKET_SAVE_TIMER_INTEGER));
         this.saveTimer = new BukkitRunnable() {
             @Override

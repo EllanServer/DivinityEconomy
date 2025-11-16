@@ -11,8 +11,8 @@
 #   - Vault Source: https://github.com/milkbowl/Vault
 #   - mxParser Source: https://github.com/mariuszgromada/MathParser.org-mXparser
 #
-# Officially supported versions: 1.21
-# API version: 1.20
+# Officially supported versions: 1.21.10
+# API version: 1.21.10
 #
 # Colours for the chat config can be found here: https://jd.bukkit.org/org/bukkit/ChatColor.html
 # &0 - Black
@@ -98,7 +98,7 @@
 # Main Settings
 Main:
   # This is the plugin config version
-  Version: 3.6.0-beta1
+  Version: 3.6.0-beta2
   # Should placeholder api support be enabled? ( use "true" / "false" )
   Enable PAPI: true
   # What language file should be used? ( use any string ) | default = en_GB.yml
@@ -205,12 +205,15 @@ Market:
     Base Quantity: 1000000
     # What scaling should be applied to purchases and sales? ( use any decimal above 0 )
     # Make sure to scale sales less than purchases or you risk creating an infinite cash bug.
-    Buy Scale: 0.1
-    Sell Scale: 0.095
+    Buy Scaling: 1
+    Sell Scaling: 0.95
+    # What pricing model should be used? ( use "V1", "V2", or "STATIC" )
+    # V1 - Linear pricing model (original system with simple inverse relationship)
+    # V2 - Elasticity-based pricing with realistic supply-demand curves (recommended)
+    # STATIC - Fixed pricing with no dynamic changes
+    Pricing Model: "V2"
     # Should the whole market be used to determine the value of items in the form of inflation? ( use "true" / "false" ) | warning, this has not been extensively tested.
     Whole Market Inflation: false
-    # Should dynamic pricing be enabled? ( use "true" / "false" )
-    Dynamic Pricing: true
     # Should items such as swords have their values scaled as per the damage applied to them? ( use "true" / "false" )
     Item Damage Scaling: true
     # Should items that have names be ignored? ( use "true" / "false" )
@@ -225,12 +228,15 @@ Market:
     Base Quantity: 1000000
     # What scaling should be applied to purchases and sales? ( use any decimal above 0 )
     # Make sure to scale sales less than purchases or you risk creating an infinite cash bug.
-    Buy Scale: 0.1
-    Sell Scale: 0.095
+    Buy Scaling: 1
+    Sell Scaling: 0.95
+    # What pricing model should be used? ( use "V1", "V2", or "STATIC" )
+    # V1 - Linear pricing model (original system with simple inverse relationship)
+    # V2 - Elasticity-based pricing with realistic supply-demand curves (recommended)
+    # STATIC - Fixed pricing with no dynamic changes
+    Pricing Model: "V2"
     # Should the whole market be used to determine the value of items in the form of inflation? ( use "true" / "false" ) | warning, this has not been extensively tested.
     Whole Market Inflation: false
-    # Should dynamic pricing be enabled? ( use "true" / "false" )
-    Dynamic Pricing: true
     # Should unsafe enchants be allowed? This allows conflicting enchants to be purchased. Such as Power on a sword, or efficiency on a bow. ( use "true" / "false" )
     Allow Unsafe Enchants: false
     # Should items that have names be ignored? ( use "true" / "false" )
@@ -245,12 +251,15 @@ Market:
     Base Quantity: 100000000000
     # What scaling should be applied to purchases and sales? ( use any decimal above 0 )
     # Make sure to scale sales less than purchases or you risk creating an infinite cash bug.
-    Buy Scale: .25
-    Sell Scale: .2
+    Buy Scaling: 1.25
+    Sell Scaling: 1.20
+    # What pricing model should be used? ( use "V1", "V2", or "STATIC" )
+    # V1 - Linear pricing model (original system with simple inverse relationship)
+    # V2 - Elasticity-based pricing with realistic supply-demand curves (recommended)
+    # STATIC - Fixed pricing with no dynamic changes
+    Pricing Model: "V2"
     # Should the whole market be used to determine the value of items in the form of inflation? ( use "true" / "false" ) | warning, this has not been extensively tested.
     Whole Market Inflation: false
-    # Should dynamic pricing be enabled? ( use "true" / "false" )
-    Dynamic Pricing: true
 
 # ----- Scaling Description -----
 # Buy Scale Description
@@ -267,8 +276,24 @@ Market:
 # The scaling value is directly applied from the config to the output of the price formula.
 # It is recommended to keep this value between 0 and 1, but it can be any number above 0.
 
-# ----- Dynamic Pricing Description -----
-# Dynamic pricing is based on the 'base quantity' of an item.
+# ----- Pricing Model Description -----
+# There are three pricing models available:
+# V1 (Linear) - The original pricing model using simple linear inverse relationship (price = baseQuantity/currentQuantity * 15)
+#   - Simple and predictable
+#   - Can lead to extreme price swings with large supply changes
+#   - Best for servers that want the classic DivinityEconomy experience
+#
+# V2 (Elasticity) - Improved pricing model using logarithmic supply-demand curves (price = 15 * (baseQuantity/currentQuantity)^0.7)
+#   - More realistic price movements with scarcity premiums and diminishing returns
+#   - Prevents extreme price volatility
+#   - Recommended for most servers
+#
+# STATIC (Fixed) - Fixed pricing with no dynamic changes
+#   - Prices remain constant regardless of supply and demand
+#   - Useful for servers that want stable, predictable pricing without market dynamics
+#   - All items maintain a constant base price
+
+# ----- Base Quantity Description -----
 # The base quantity is the amount of an item that is considered to be the 'base' value of the item.
 # This means that if the base quantity is 1000, and there is 1000 of an item in the market, the item will be worth 1.
 # The value of 1 is then multiplied by the scaling value to get the final price of the item.

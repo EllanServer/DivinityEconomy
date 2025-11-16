@@ -3,6 +3,7 @@ package org.divinitycraft.divinityeconomy.market;
 public enum MapKeys {
     ALLOWED("ALLOWED"),
     QUANTITY("QUANTITY"),
+    ELASTICITY("ELASTICITY"),
     MATERIAL_ID("MATERIAL_ID"),
     POTION_TYPE("POTION_TYPE"),
     MAX_LEVEL("MAX_LEVEL"),
