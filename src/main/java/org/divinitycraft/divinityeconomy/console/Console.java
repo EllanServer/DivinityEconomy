@@ -84,11 +84,12 @@ public class Console extends DivinityModule {
     /**
      * Inserts the colours into the string
      * Supports both traditional ChatColor codes and HEX colors (&#RRGGBB or #RRGGBB)
+     * This method is now public so it can be called from other classes to process locale strings
      *
      * @param string - The string to insert the colours into
      * @return The string with the colours inserted
      */
-    private static String insertColours(String string) {
+    public static String insertColours(String string) {
         if (string == null) {
             return "";
         }
@@ -154,13 +155,19 @@ public class Console extends DivinityModule {
 
     /**
      * Sends a formatted message to the console
+     * Automatically processes color codes in the message
      *
      * @param level   - The log level
      * @param message - The message to send
      * @param args    - The arguments
      */
     public void send(LogLevel level, String message, Object... args) {
-        this.consoleSender.sendMessage(consolePrefix + level.getColour() + String.format(message, args));
+        // Format the message with arguments
+        String formattedMessage = String.format(message, args);
+        // Process color codes in the formatted message
+        formattedMessage = insertColours(formattedMessage);
+        // Send the message
+        this.consoleSender.sendMessage(consolePrefix + level.getColour() + formattedMessage);
     }
 
 
@@ -222,16 +229,22 @@ public class Console extends DivinityModule {
 
     /**
      * Sends a formatted message to a player
+     * Automatically processes color codes in the message
      *
      * @param player  - The player to send to
      * @param message - The message to send
      * @param args    - The args
      */
     public void send(Player player, LogLevel level, String message, Object... args) {
+        // Format the message with arguments
+        String formattedMessage = String.format(message, args);
+        // Process color codes in the formatted message
+        formattedMessage = insertColours(formattedMessage);
+        
         if (player != null) {
-            player.sendMessage(chatPrefix + level.getColour() + String.format(message, args));
+            player.sendMessage(chatPrefix + level.getColour() + formattedMessage);
         } else {
-            this.send(level, message, args);
+            this.consoleSender.sendMessage(consolePrefix + level.getColour() + formattedMessage);
         }
     }
 

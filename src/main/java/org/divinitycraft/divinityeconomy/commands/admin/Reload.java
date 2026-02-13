@@ -29,46 +29,39 @@ public class Reload extends DivinityCommand {
         if (args.length == 1) {
             // Get the first argument
             String arg = args[0].toLowerCase();
-
+            
             // If the argument is "config"
             if (LangEntry.W_config.is(getMain(), arg)) {
                 getMain().reloadConfig();
+                // 颜色代码会自动解析，无需手动处理
                 getMain().getConsole().info(sender, LangEntry.RELOAD_Config.get(getMain()));
                 return true;
             }
-
-
             // If the argument is "materials"
             else if (LangEntry.W_materials.is(getMain(), arg)) {
                 getMain().getMatMan().loadItems();
+                // 颜色代码会自动解析
                 getMain().getConsole().info(sender, LangEntry.RELOAD_Materials.get(getMain()));
                 return true;
             }
-
             // If the argument is "enchants"
             else if (LangEntry.W_enchants.is(getMain(), arg)) {
                 getMain().getEnchMan().loadItems();
                 getMain().getConsole().info(sender, LangEntry.RELOAD_Enchants.get(getMain()));
                 return true;
             }
-
-
             // If the argument is "potions"
             else if (LangEntry.W_potions.is(getMain(), arg)) {
                 getMain().getPotMan().loadItems();
                 getMain().getConsole().info(sender, LangEntry.RELOAD_Potions.get(getMain()));
                 return true;
             }
-
-
             // If the argument is "entities"
             else if (LangEntry.W_entities.is(getMain(), arg)) {
                 getMain().getEntMan().loadItems();
                 getMain().getConsole().info(sender, LangEntry.RELOAD_Entities.get(getMain()));
                 return true;
             }
-
-
             // If the argument is "experience"
             else if (LangEntry.W_experience.is(getMain(), arg)) {
                 getMain().getExpMan().loadItems();
@@ -76,7 +69,7 @@ public class Reload extends DivinityCommand {
                 return true;
             }
         }
-
+        
         getMain().getConsole().usage(sender, LangEntry.RELOAD_TypeRequired.get(getMain()), this.help.getUsages());
         return false;
     }
