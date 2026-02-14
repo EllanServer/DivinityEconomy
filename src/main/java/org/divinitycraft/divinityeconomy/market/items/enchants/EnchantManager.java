@@ -675,3 +675,4 @@ public class EnchantManager extends ItemManager {
         }
 
         //
+}
