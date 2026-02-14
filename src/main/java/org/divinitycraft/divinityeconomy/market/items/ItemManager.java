@@ -35,7 +35,12 @@ public abstract class ItemManager extends TokenManager {
      * @return If the item is named
      */
     public static boolean itemIsNamed(@Nonnull ItemStack itemStack) {
-        return itemStack.getItemMeta().hasDisplayName();
+        ItemMeta meta = itemStack.getItemMeta();
+        // 修复: 添加 null 检查，防止 ItemMeta 为 null 时抛出 NPE
+        if (meta == null) {
+            return false;
+        }
+        return meta.hasDisplayName();
     }
 
     /**
@@ -44,23 +49,36 @@ public abstract class ItemManager extends TokenManager {
      * @return If the item has lore
      */
     public static boolean itemHasLore(@Nonnull ItemStack itemStack) {
-        return itemStack.getItemMeta().hasLore();
+        ItemMeta meta = itemStack.getItemMeta();
+        // 修复: 添加 null 检查
+        if (meta == null) {
+            return false;
+        }
+        return meta.hasLore();
     }
 
-    
-
     /**
-     * Returns the number of books required to make the level provided
-     * @param itemStacks - The item stacks to check
-     * @return The number of books required to make the level provided
+     * Removes all enchanted items from the given array
+     * @param itemStacks - The item stacks to filter
+     * @return The filtered array without enchanted items
      */
     public static ItemStack[] removeEnchantedItems(ItemStack[] itemStacks) {
         ArrayList<ItemStack> nonEnchanted = new ArrayList<>();
         Arrays.stream(itemStacks).forEach(stack -> {
+            // 修复: 先检查 stack 是否为 null，以及 ItemMeta 是否为 null
+            if (stack == null) {
+                return; // 跳过 null 的 ItemStack
+            }
+            ItemMeta itemMeta = stack.getItemMeta();
+            if (itemMeta == null) {
+                // 没有 ItemMeta 说明不可能有附魔，直接加入非附魔列表
+                nonEnchanted.add(stack);
+                return;
+            }
             if (EnchantManager.getEnchantments(stack).isEmpty()) {
                 nonEnchanted.add(stack);
             } else {
-                if (stack.getItemMeta() instanceof EnchantmentStorageMeta meta) {
+                if (itemMeta instanceof EnchantmentStorageMeta meta) {
                     if (meta.getStoredEnchants().isEmpty()) {
                         nonEnchanted.add(stack);
                     }
@@ -70,7 +88,6 @@ public abstract class ItemManager extends TokenManager {
         return nonEnchanted.toArray(new ItemStack[0]);
     }
 
-
     /**
      * Removes all items that are named or have lore
      * @param itemStacks
@@ -79,6 +96,10 @@ public abstract class ItemManager extends TokenManager {
     public static ItemStack[] removeNamedItems(ItemStack[] itemStacks) {
         ArrayList<ItemStack> nonNamed = new ArrayList<>();
         Arrays.stream(itemStacks).forEach(stack -> {
+            // 修复: 添加 null 检查
+            if (stack == null) {
+                return;
+            }
             if (!(itemIsNamed(stack) || itemHasLore(stack))) {
                 nonNamed.add(stack);
             }
@@ -93,7 +114,11 @@ public abstract class ItemManager extends TokenManager {
      */
     public static ItemStack[] cloneItems(ItemStack[] itemStacks) {
         ArrayList<ItemStack> clones = new ArrayList<>();
-        Arrays.stream(itemStacks).forEach(stack -> clones.add(clone(stack)));
+        Arrays.stream(itemStacks).forEach(stack -> {
+            if (stack != null) {
+                clones.add(clone(stack));
+            }
+        });
         return clones.toArray(new ItemStack[0]);
     }
 
@@ -101,8 +126,11 @@ public abstract class ItemManager extends TokenManager {
         // Create a new item stack
         ItemStack newItemStack = new ItemStack(itemStack.getType(), itemStack.getAmount());
 
-        // Set item meta
-        newItemStack.setItemMeta(itemStack.getItemMeta());
+        // Set item meta (修复: 添加 null 检查)
+        ItemMeta meta = itemStack.getItemMeta();
+        if (meta != null) {
+            newItemStack.setItemMeta(meta);
+        }
 
         // Add enchantments
         newItemStack.addUnsafeEnchantments(EnchantManager.getEnchantments(itemStack));
@@ -118,12 +146,12 @@ public abstract class ItemManager extends TokenManager {
     public static int getMaterialCount(ItemStack[] iStacks) {
         int count = 0;
         for (ItemStack iStack : iStacks) {
-            count += iStack.getAmount();
+            if (iStack != null) {
+                count += iStack.getAmount();
+            }
         }
-
         return count;
     }
-
 
     /**
      * Checks if the given item has been assigned a UUID
@@ -132,33 +160,41 @@ public abstract class ItemManager extends TokenManager {
      */
     public static boolean itemIsUnidentified(ItemStack itemStack) {
         ItemMeta itemMeta = itemStack.getItemMeta();
+        // 修复: 添加 null 检查
+        if (itemMeta == null) {
+            return false;
+        }
         PersistentDataContainer container = itemMeta.getPersistentDataContainer();
         return container.has(NamespacedKey.minecraft("de-uuid"), PersistentDataType.STRING);
     }
-
 
     /**
      * Returns the UUID of the given item stack
      */
     public static String getIdentity(ItemStack itemStack) {
         ItemMeta itemMeta = itemStack.getItemMeta();
+        // 修复: 添加 null 检查
+        if (itemMeta == null) {
+            return null;
+        }
         PersistentDataContainer container = itemMeta.getPersistentDataContainer();
         return container.get(NamespacedKey.minecraft("de-uuid"), PersistentDataType.STRING);
     }
 
-
     /**
      * Identifies the given item stack with a UUID
      * @param itemStack
-     * @return
      */
     public static void generateIdentity(ItemStack itemStack) {
         ItemMeta itemMeta = itemStack.getItemMeta();
+        // 修复: 添加 null 检查
+        if (itemMeta == null) {
+            return;
+        }
         PersistentDataContainer container = itemMeta.getPersistentDataContainer();
         container.set(NamespacedKey.minecraft("de-uuid"), PersistentDataType.STRING, UUID.randomUUID().toString());
         itemStack.setItemMeta(itemMeta);
     }
-
 
     public static String getOrSetIdentity(ItemStack itemStack) {
         if (itemIsUnidentified(itemStack)) {
@@ -169,74 +205,55 @@ public abstract class ItemManager extends TokenManager {
         }
     }
 
-
     public static List<ItemStack> removeIdentity(List<ItemStack> itemStacks) {
         List<ItemStack> nonIdentified = new ArrayList<>();
         for (ItemStack itemStack : itemStacks) {
-            nonIdentified.add(removeIdentity(itemStack));
+            if (itemStack != null) {
+                nonIdentified.add(removeIdentity(itemStack));
+            }
         }
         return nonIdentified;
     }
 
-
     public static ItemStack removeIdentity(ItemStack itemStack) {
         ItemMeta itemMeta = itemStack.getItemMeta();
+        // 修复: 添加 null 检查
+        if (itemMeta == null) {
+            return itemStack;
+        }
         PersistentDataContainer container = itemMeta.getPersistentDataContainer();
         container.remove(NamespacedKey.minecraft("de-uuid"));
         itemStack.setItemMeta(itemMeta);
         return itemStack;
     }
 
-
     /**
      * Returns the names and aliases for the itemstack given
-     *
-     * @param itemStack
-     * @return
      */
     public abstract Set<String> getItemNames(ItemStack itemStack);
 
     /**
      * Returns the names and aliases for the itemstack given starting with startswith
-     *
-     * @param itemStack
-     * @param startswith
-     * @return
      */
     public abstract Set<String> getItemNames(ItemStack itemStack, String startswith);
 
     /**
      * Returns the combined sell value of all the items given
-     *
-     * @param itemStacks - The items to calculate the price for
-     * @return ValueResponse - The value of the items, or not if an error occurred.
      */
     public abstract TokenValueResponse getSellValue(ItemStack[] itemStacks);
 
     /**
      * Returns the sell value for a single type of items.
-     *
-     * @param itemStack - The unique item to value
-     * @param amount    - The amount of that item
-     * @return
      */
     public abstract TokenValueResponse getSellValue(ItemStack itemStack, int amount);
 
-
     /**
      * Returns the price of buying the given items.
-     *
-     * @param itemStacks - The items to get the price for
-     * @return MaterialValue
      */
     public abstract TokenValueResponse getBuyValue(ItemStack[] itemStacks);
 
     /**
      * Returns the buy value for a single type of items.
-     *
-     * @param itemStack - The unique item to value
-     * @param amount    - The amount of the item
-     * @return
      */
     public abstract TokenValueResponse getBuyValue(ItemStack itemStack, int amount);
 }
