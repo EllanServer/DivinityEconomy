@@ -20,10 +20,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -106,17 +103,12 @@ public class EnchantManager extends ItemManager {
      * Returns if the enchantment given is supported by the itemstack given.
      */
     public boolean supportsEnchant(ItemStack itemStack, Enchantment enchantment) {
-        if (allowUnsafe) return true;
-        if (itemStack.getType() == Material.BOOK) return true;
-
-        ItemMeta itemMeta = itemStack.getItemMeta();
-        if (itemMeta == null) return false;
-
-        if (itemMeta instanceof EnchantmentStorageMeta enchantmentStorageMeta) {
-            return !enchantmentStorageMeta.hasConflictingStoredEnchant(enchantment);
-        }
-
-        return enchantment.canEnchantItem(itemStack);
+        return (
+            allowUnsafe ||
+            (itemStack.getType() == Material.BOOK) ||
+            (itemStack.getItemMeta() instanceof EnchantmentStorageMeta enchantmentStorageMeta && !enchantmentStorageMeta.hasConflictingStoredEnchant(enchantment)) ||
+            enchantment.canEnchantItem(itemStack)
+        );
     }
 
     /**
@@ -148,7 +140,6 @@ public class EnchantManager extends ItemManager {
      */
     public void removeEnchantLevelsFromItem(ItemStack itemStack, Enchantment enchantment, int levels) {
         ItemMeta itemMeta = itemStack.getItemMeta();
-        if (itemMeta == null) return;
 
         // If item can store enchants
         if (itemMeta instanceof EnchantmentStorageMeta enchantmentStorageMeta) {
@@ -218,10 +209,8 @@ public class EnchantManager extends ItemManager {
         if (itemStack.getType() == Material.BOOK) {
             itemStack.setType(Material.ENCHANTED_BOOK);
             EnchantmentStorageMeta esm = (EnchantmentStorageMeta) itemStack.getItemMeta();
-            if (esm != null) {
-                esm.addStoredEnchant(enchantment, newLevel, true);
-                itemStack.setItemMeta(esm);
-            }
+            esm.addStoredEnchant(enchantment, newLevel, true);
+            itemStack.setItemMeta(esm);
         }
 
         // If item has enchantment storage
@@ -249,16 +238,13 @@ public class EnchantManager extends ItemManager {
         // Get item meta
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        // If item meta is null, it can't be enchanted
-        if (itemMeta == null) return false;
-
         // If item has enchantment storage
         if (itemMeta instanceof EnchantmentStorageMeta) {
             return ((EnchantmentStorageMeta) itemMeta).hasStoredEnchants();
         }
 
         // Else return itemstack meta.
-        return itemMeta.hasEnchants();
+        return itemMeta != null && itemMeta.hasEnchants();
     }
 
     /**
@@ -270,7 +256,6 @@ public class EnchantManager extends ItemManager {
     public EnchantValueResponse getBuyValue(ItemStack[] itemStacks) {
         // Create response
         EnchantValueResponse response = new EnchantValueResponse(EconomyResponse.ResponseType.SUCCESS, null);
-
 
         // Loop through enchants
         for (ItemStack itemStack : itemStacks) {
@@ -331,20 +316,16 @@ public class EnchantManager extends ItemManager {
         // Create response
         EnchantValueResponse response = new EnchantValueResponse(EconomyResponse.ResponseType.SUCCESS, null);
 
-
         // Get enchant data
         MarketableEnchant enchantData = (MarketableEnchant) this.getItem(enchantID);
-
 
         // Enchant data is null
         if (enchantData == null)
             return (EnchantValueResponse) response.setFailure(LangEntry.MARKET_ItemDoesNotExist.get(getMain(), enchantID));
 
-
         // Check exists in store
         if (enchantData.getEnchantment() == null)
             return (EnchantValueResponse) response.setFailure(LangEntry.MARKET_ItemDoesNotExistInTheStore.get(getMain(), enchantID));
-
 
         // Get current and new enchantment level
         Map<Enchantment, Integer> enchantments = EnchantManager.getEnchantments(itemStack);
@@ -356,31 +337,25 @@ public class EnchantManager extends ItemManager {
         double value = this.calculatePrice(enchantData, enchantAmount, this.buyScale, false);
         response.addToken(enchantData, enchantAmount, value, itemStack);
 
-
         // Check enchant is allowed
         if (!(enchantData.getAllowed()))
             return (EnchantValueResponse) response.setFailure(LangEntry.MARKET_ItemIsBanned.get(getMain(), enchantData.getName()));
-
 
         // Check enchant is supported on item
         if (!(this.supportsEnchant(itemStack, enchantData.getEnchantment()) || this.allowUnsafe))
             return (EnchantValueResponse) response.setFailure(LangEntry.MARKET_ItemIsNotSupportedOnThisItem.get(getMain(), enchantData.getName()));
 
-
         // Check new level isn't greater than max
         if (enchantData.getMaxLevel() < newTotalLevel)
             return (EnchantValueResponse) response.setFailure(LangEntry.MARKET_LevelWouldBeGreaterThanMax.get(getMain(), newTotalLevel, enchantData.getMaxLevel()));
-
 
         // Check store has enough
         if (enchantAmount > enchantData.getQuantity())
             return (EnchantValueResponse) response.setFailure(LangEntry.MARKET_InvalidStockAmount.get(getMain(), enchantData.getName(), enchantData.getQuantity(), enchantAmount));
 
-
         // Check market isn't saturated
         if (value <= 0)
             return (EnchantValueResponse) response.setFailure(LangEntry.MARKET_ItemIsWorthless.get(getMain(), enchantData.getName()));
-
 
         // Return success
         return response;
@@ -397,7 +372,6 @@ public class EnchantManager extends ItemManager {
     public EnchantValueResponse getSellValue(ItemStack[] itemStacks) {
         // Create response
         EnchantValueResponse response = new EnchantValueResponse(EconomyResponse.ResponseType.SUCCESS, null);
-
 
         // Loop through enchants
         for (ItemStack itemStack : itemStacks) {
@@ -510,7 +484,6 @@ public class EnchantManager extends ItemManager {
         // Create response
         EnchantValueResponse response = new EnchantValueResponse(EconomyResponse.ResponseType.SUCCESS, null);
 
-
         // Get enchant data
         MarketableEnchant enchantData = (MarketableEnchant) this.getItem(enchantID);
 
@@ -518,21 +491,17 @@ public class EnchantManager extends ItemManager {
         if (enchantData == null)
             return (EnchantValueResponse) response.setFailure(LangEntry.MARKET_ItemDoesNotExist.get(getMain(), enchantID));
 
-
         // Get enchantment
         Enchantment enchantment = enchantData.getEnchantment();
         String itemCleanName = this.getMarkMan().getName(itemStack);
-
 
         // No enchantment
         if (enchantment == null)
             return (EnchantValueResponse) response.setFailure(LangEntry.MARKET_ItemDoesNotExistInTheStore.get(getMain(), enchantID));
 
-
         // Check enchant is allowed
         if (!enchantData.getAllowed())
             return (EnchantValueResponse) response.setFailure(LangEntry.MARKET_ItemIsBanned.get(getMain(), enchantData.getName()));
-
 
         // Get itemstack enchantments
         Map<Enchantment, Integer> itemStackEnchants = EnchantManager.getEnchantments(itemStack);
@@ -541,26 +510,21 @@ public class EnchantManager extends ItemManager {
         if (!itemStackEnchants.containsKey(enchantment))
             return (EnchantValueResponse) response.setFailure(LangEntry.MARKET_ItemIsNotEnchanted.get(getMain(), itemCleanName, enchantData.getName()));
 
-
         // Get enchantment stack level
         int itemStackEnchantLevel = itemStackEnchants.get(enchantment);
         int bookLevel = MarketableEnchant.levelsToBooks(itemStackEnchantLevel - levelsToSell, itemStackEnchantLevel);
-
 
         // Check enough levels to sell
         if (itemStackEnchantLevel < levelsToSell)
             return (EnchantValueResponse) response.setFailure(LangEntry.MARKET_ItemNotEnoughLevels.get(getMain(), itemCleanName, itemStackEnchantLevel, levelsToSell));
 
-
         // Get value
         double value = this.calculatePrice(enchantData, bookLevel, this.sellScale, false);
         response.addToken(enchantData, levelsToSell, value, itemStack);
 
-
         // Value equal or less than 0, return saturation
         if (value <= 0)
             return (EnchantValueResponse) response.setFailure(LangEntry.MARKET_ItemIsWorthless.get(getMain(), enchantData.getName()));
-
 
         return response;
     }
@@ -659,20 +623,28 @@ public class EnchantManager extends ItemManager {
 
 
     /**
-     * 获取物品的附魔列表（包括附魔书的存储附魔）
-     * 已修复：当 itemMeta 为 null 时返回空 Map，避免 NullPointerException
+     * Returns enchantments from an ItemStack safely.
+     * Handles both regular enchantments and stored enchantments (e.g., enchanted books).
+     * Returns an empty map if the item has no ItemMeta.
      *
-     * @param itemStack - 要检查的物品
-     * @return 附魔与等级的 Map，如果没有附魔或 meta 为 null 则返回空 Map
+     * @param itemStack - The itemstack to get enchantments from
+     * @return Map of enchantments and their levels
      */
     public static Map<Enchantment, Integer> getEnchantments(@Nonnull ItemStack itemStack) {
         // Get item stack meta
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        // 【关键修复】如果 itemMeta 为 null，直接返回空 Map，防止 NPE
+        // Null check to prevent NullPointerException
         if (itemMeta == null) {
             return Collections.emptyMap();
         }
 
-        //
-}
+        // Item can store enchants, return stored enchants
+        if (itemMeta instanceof EnchantmentStorageMeta enchantmentStorageMeta) {
+            return enchantmentStorageMeta.getStoredEnchants();
+        }
+
+        // Return direct enchants
+        return itemMeta.getEnchants();
+    }
+} // <-- 这是类的闭合括号，之前缺失了！
