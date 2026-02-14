@@ -20,6 +20,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -105,16 +106,21 @@ public class EnchantManager extends ItemManager {
      * Returns if the enchantment given is supported by the itemstack given.
      */
     public boolean supportsEnchant(ItemStack itemStack, Enchantment enchantment) {
-        return (
-            allowUnsafe ||
-            (itemStack.getType() == Material.BOOK) ||
-            (itemStack.getItemMeta() instanceof EnchantmentStorageMeta enchantmentStorageMeta && !enchantmentStorageMeta.hasConflictingStoredEnchant(enchantment)) ||
-            enchantment.canEnchantItem(itemStack)
-        );
+        if (allowUnsafe) return true;
+        if (itemStack.getType() == Material.BOOK) return true;
+
+        ItemMeta itemMeta = itemStack.getItemMeta();
+        if (itemMeta == null) return false;
+
+        if (itemMeta instanceof EnchantmentStorageMeta enchantmentStorageMeta) {
+            return !enchantmentStorageMeta.hasConflictingStoredEnchant(enchantment);
+        }
+
+        return enchantment.canEnchantItem(itemStack);
     }
 
     /**
-     * Returnst the type of token
+     * Returns the type of token
      *
      * @return String
      */
@@ -142,6 +148,7 @@ public class EnchantManager extends ItemManager {
      */
     public void removeEnchantLevelsFromItem(ItemStack itemStack, Enchantment enchantment, int levels) {
         ItemMeta itemMeta = itemStack.getItemMeta();
+        if (itemMeta == null) return;
 
         // If item can store enchants
         if (itemMeta instanceof EnchantmentStorageMeta enchantmentStorageMeta) {
@@ -211,8 +218,10 @@ public class EnchantManager extends ItemManager {
         if (itemStack.getType() == Material.BOOK) {
             itemStack.setType(Material.ENCHANTED_BOOK);
             EnchantmentStorageMeta esm = (EnchantmentStorageMeta) itemStack.getItemMeta();
-            esm.addStoredEnchant(enchantment, newLevel, true);
-            itemStack.setItemMeta(esm);
+            if (esm != null) {
+                esm.addStoredEnchant(enchantment, newLevel, true);
+                itemStack.setItemMeta(esm);
+            }
         }
 
         // If item has enchantment storage
@@ -240,7 +249,10 @@ public class EnchantManager extends ItemManager {
         // Get item meta
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        // If item is has enchantedment storage
+        // If item meta is null, it can't be enchanted
+        if (itemMeta == null) return false;
+
+        // If item has enchantment storage
         if (itemMeta instanceof EnchantmentStorageMeta) {
             return ((EnchantmentStorageMeta) itemMeta).hasStoredEnchants();
         }
@@ -646,16 +658,20 @@ public class EnchantManager extends ItemManager {
     }
 
 
+    /**
+     * 获取物品的附魔列表（包括附魔书的存储附魔）
+     * 已修复：当 itemMeta 为 null 时返回空 Map，避免 NullPointerException
+     *
+     * @param itemStack - 要检查的物品
+     * @return 附魔与等级的 Map，如果没有附魔或 meta 为 null 则返回空 Map
+     */
     public static Map<Enchantment, Integer> getEnchantments(@Nonnull ItemStack itemStack) {
         // Get item stack meta
         ItemMeta itemMeta = itemStack.getItemMeta();
 
-        // Item can store enchants, return stored enchants
-        if (itemMeta instanceof EnchantmentStorageMeta enchantmentStorageMeta) {
-            return enchantmentStorageMeta.getStoredEnchants();
+        // 【关键修复】如果 itemMeta 为 null，直接返回空 Map，防止 NPE
+        if (itemMeta == null) {
+            return Collections.emptyMap();
         }
 
-        // Return direct enchants
-        return itemMeta.getEnchants();
-    }
-}
+        //
