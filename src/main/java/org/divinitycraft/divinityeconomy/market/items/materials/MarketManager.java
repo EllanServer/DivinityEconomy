@@ -4,6 +4,7 @@ import org.divinitycraft.divinityeconomy.DEPlugin;
 import org.divinitycraft.divinityeconomy.DivinityModule;
 import org.divinitycraft.divinityeconomy.utils.Converter;
 import net.milkbowl.vault.economy.EconomyResponse;
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
@@ -41,6 +42,11 @@ public class MarketManager extends DivinityModule {
     }
 
     public MarketableMaterial getItem(ItemStack itemStack) {
+        // 防御性检查：null 或 AIR 直接返回 null
+        if (itemStack == null || itemStack.getType() == Material.AIR || itemStack.getType().isAir()) {
+            return null;
+        }
+
         MarketableMaterial material = null;
 
         for (MaterialManager man : this.managers) {
@@ -56,6 +62,10 @@ public class MarketManager extends DivinityModule {
     }
 
     public MarketableMaterial getItem(String alias) {
+        if (alias == null || alias.isEmpty()) {
+            return null;
+        }
+
         MarketableMaterial material = null;
 
         for (MaterialManager man : this.managers) {
@@ -147,8 +157,18 @@ public class MarketManager extends DivinityModule {
         // Create response
         MaterialValueResponse response = new MaterialValueResponse(EconomyResponse.ResponseType.SUCCESS, null);
 
+        // 防御性检查
+        if (itemStacks == null || itemStacks.length == 0) {
+            return response;
+        }
+
         // Loop through itemstacks
         for (ItemStack itemStack : itemStacks) {
+            // 跳过 null 或 AIR 物品
+            if (itemStack == null || itemStack.getType() == Material.AIR || itemStack.getType().isAir()) {
+                continue;
+            }
+
             // Get the marketable material
             MarketableMaterial marketableMaterial = this.getItem(itemStack);
 
@@ -173,6 +193,11 @@ public class MarketManager extends DivinityModule {
 
 
     public String getName(ItemStack itemStack) {
+        // 防御性检查
+        if (itemStack == null || itemStack.getType() == Material.AIR || itemStack.getType().isAir()) {
+            return "AIR";
+        }
+
         MarketableMaterial marketableMaterial = this.getItem(itemStack);
         if (marketableMaterial == null) {
             return itemStack.getType().name();
@@ -181,6 +206,9 @@ public class MarketManager extends DivinityModule {
     }
 
     public double getInflation() {
+        if (this.managers.isEmpty()) {
+            return 0;
+        }
         double inflation = 0;
         for (MaterialManager manager : this.managers) {
             inflation += manager.getInflation();
